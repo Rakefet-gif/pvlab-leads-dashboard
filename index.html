@@ -1,0 +1,1072 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>PV Lab Germany — Smart Lead Management Dashboard</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    :root {
+      --navy: #1B365D;
+      --navy-dark: #122440;
+      --crimson: #C8102E;
+      --crimson-hover: #A30D25;
+      --steel: #3B6E9C;
+      --teal-slate: #4A777A;
+      --bg-page: #F4F6F8;
+      --bg-card: #FFFFFF;
+      --border: #DCE2E8;
+      --text-main: #1E293B;
+      --text-muted: #64748B;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+    body { background-color: var(--bg-page); color: var(--text-main); line-height: 1.5; }
+
+    /* Top Header */
+    header {
+      background-color: var(--bg-card);
+      border-bottom: 3px solid var(--navy);
+      padding: 1rem 2rem;
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      align-items: center;
+      gap: 1rem;
+      box-shadow: 0 2px 6px rgba(27, 54, 93, 0.06);
+    }
+
+    .brand-area { display: flex; align-items: center; gap: 1rem; }
+    .brand-logo {
+      background: var(--navy);
+      color: #fff;
+      font-weight: 800;
+      font-size: 1.25rem;
+      padding: 0.5rem 0.9rem;
+      letter-spacing: 1px;
+      border-left: 5px solid var(--crimson);
+    }
+    [dir="ltr"] .brand-logo { border-left: none; border-right: 5px solid var(--crimson); }
+    .brand-slogan {
+      color: var(--crimson);
+      font-weight: 700;
+      font-size: 0.78rem;
+      letter-spacing: 1.2px;
+      text-transform: uppercase;
+    }
+    .brand-sub { color: var(--text-muted); font-size: 0.85rem; }
+
+    .header-controls { display: flex; align-items: center; gap: 1rem; flex-wrap: wrap; }
+    .lang-switcher {
+      display: inline-flex;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      overflow: hidden;
+      background: var(--bg-page);
+    }
+    .lang-btn {
+      border: none;
+      background: transparent;
+      padding: 0.45rem 0.85rem;
+      cursor: pointer;
+      font-weight: 600;
+      font-size: 0.85rem;
+      color: var(--navy);
+      transition: 0.2s;
+    }
+    .lang-btn.active { background: var(--navy); color: #fff; }
+
+    .btn-primary {
+      background-color: var(--crimson);
+      color: #fff;
+      border: none;
+      padding: 0.55rem 1.1rem;
+      border-radius: 6px;
+      font-weight: 600;
+      cursor: pointer;
+      font-size: 0.9rem;
+      transition: 0.2s;
+    }
+    .btn-primary:hover { background-color: var(--crimson-hover); }
+
+    /* Container */
+    .container { max-width: 1320px; margin: 1.5rem auto; padding: 0 1.5rem; }
+
+    /* KPI Grid */
+    .kpi-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 1rem;
+      margin-bottom: 1.5rem;
+    }
+    .kpi-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-top: 4px solid var(--navy);
+      border-radius: 8px;
+      padding: 1.2rem;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+    }
+    .kpi-card.accent { border-top-color: var(--crimson); }
+    .kpi-label { font-size: 0.85rem; color: var(--text-muted); font-weight: 600; }
+    .kpi-value { font-size: 1.8rem; font-weight: 800; color: var(--navy); margin-top: 0.3rem; }
+    .kpi-card.accent .kpi-value { color: var(--crimson); }
+
+    /* Charts Grid */
+    .charts-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
+      gap: 1.25rem;
+      margin-bottom: 1.5rem;
+    }
+    .card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 1.25rem;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+    }
+    .card-title { font-size: 1.05rem; font-weight: 700; color: var(--navy); margin-bottom: 1rem; }
+    .chart-wrapper { position: relative; height: 240px; }
+
+    /* Filters & Table */
+    .filters-bar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.75rem;
+      margin-bottom: 1rem;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .filter-group { display: flex; gap: 0.75rem; flex-wrap: wrap; }
+    input[type="text"], select {
+      padding: 0.5rem 0.8rem;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      font-size: 0.9rem;
+      background: #fff;
+      color: var(--text-main);
+    }
+
+    .table-responsive { overflow-x: auto; }
+    table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
+    th {
+      background-color: var(--navy);
+      color: #fff;
+      text-align: inherit;
+      padding: 0.75rem 1rem;
+      font-weight: 600;
+    }
+    td { padding: 0.75rem 1rem; border-bottom: 1px solid var(--border); vertical-align: middle; }
+    tr:hover { background-color: #F8FAFC; }
+
+    .score-badge {
+      display: inline-block;
+      padding: 0.25rem 0.6rem;
+      border-radius: 999px;
+      font-weight: 700;
+      font-size: 0.82rem;
+    }
+    .score-high { background: #FEE2E2; color: var(--crimson); }
+    .score-med { background: #E0E7FF; color: var(--navy); }
+    .score-low { background: #E2E8F0; color: #475569; }
+
+    .btn-inspect {
+      background: var(--navy);
+      color: #fff;
+      border: none;
+      padding: 0.35rem 0.75rem;
+      border-radius: 5px;
+      cursor: pointer;
+      font-size: 0.82rem;
+      font-weight: 600;
+    }
+    .btn-inspect:hover { background: var(--crimson); }
+
+    /* Modal & Drawer */
+    .overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(18, 36, 64, 0.55);
+      z-index: 100;
+      align-items: center;
+      justify-content: center;
+      padding: 1rem;
+    }
+    .overlay.open { display: flex; }
+    .modal-box {
+      background: #fff;
+      border-radius: 8px;
+      max-width: 520px;
+      width: 100%;
+      padding: 1.5rem;
+      border-top: 5px solid var(--crimson);
+      box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+    }
+    .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; }
+    .close-btn { background: none; border: none; font-size: 1.4rem; cursor: pointer; color: var(--text-muted); }
+    .form-row { margin-bottom: 0.9rem; }
+    .form-row label { display: block; font-size: 0.85rem; font-weight: 600; margin-bottom: 0.3rem; color: var(--navy); }
+    .form-row input, .form-row select { width: 100%; }
+
+    .protocol-box {
+      background: var(--bg-page);
+      border-right: 4px solid var(--navy);
+      padding: 0.9rem;
+      border-radius: 6px;
+      margin-top: 0.75rem;
+      font-size: 0.88rem;
+    }
+    [dir="ltr"] .protocol-box { border-right: none; border-left: 4px solid var(--navy); }
+
+    /* Airtable connection */
+    .btn-secondary {
+      background: #fff;
+      color: var(--navy);
+      border: 1px solid var(--navy);
+      padding: 0.5rem 1rem;
+      border-radius: 6px;
+      font-weight: 600;
+      cursor: pointer;
+      font-size: 0.88rem;
+      transition: 0.2s;
+    }
+    .btn-secondary:hover { background: var(--navy); color: #fff; }
+    .db-status {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.45rem;
+      padding: 0.35rem 0.8rem;
+      border-radius: 999px;
+      font-size: 0.8rem;
+      font-weight: 700;
+      border: 1px solid var(--border);
+      background: var(--bg-page);
+      color: var(--text-muted);
+      cursor: default;
+    }
+    .db-status .dot { width: 9px; height: 9px; border-radius: 50%; background: #94A3B8; }
+    .db-status.live { background: #DCFCE7; border-color: #86EFAC; color: #166534; cursor: pointer; }
+    .db-status.live .dot { background: #16A34A; box-shadow: 0 0 0 3px rgba(22,163,74,0.2); }
+    .db-status.loading { background: #FEF9C3; border-color: #FDE047; color: #854D0E; }
+    .db-status.loading .dot { background: #CA8A04; }
+    .db-status.error { background: #FEE2E2; border-color: #FCA5A5; color: #991B1B; cursor: pointer; }
+    .db-status.error .dot { background: var(--crimson); }
+    .form-row input[type="password"] {
+      padding: 0.5rem 0.8rem;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      font-size: 0.9rem;
+    }
+    .form-hint { font-size: 0.78rem; color: var(--text-muted); margin-top: 0.25rem; }
+    .form-msg { font-size: 0.85rem; margin-top: 0.75rem; min-height: 1.2em; }
+    .form-msg.err { color: var(--crimson); }
+    .form-msg.ok { color: #166534; }
+    .btn-row { display: flex; gap: 0.6rem; margin-top: 0.5rem; }
+    .btn-row > * { flex: 1; }
+    .toast {
+      position: fixed;
+      bottom: 1.2rem;
+      inset-inline-start: 50%;
+      transform: translateX(-50%);
+      background: var(--navy-dark);
+      color: #fff;
+      padding: 0.7rem 1.1rem;
+      border-radius: 6px;
+      font-size: 0.88rem;
+      z-index: 200;
+      box-shadow: 0 6px 18px rgba(0,0,0,0.25);
+      display: none;
+      max-width: calc(100% - 2rem);
+    }
+    [dir="rtl"] .toast { transform: translateX(50%); }
+    .toast.show { display: block; }
+    .toast.err { background: var(--crimson); }
+
+    footer {
+      text-align: center;
+      padding: 1.5rem;
+      color: var(--text-muted);
+      font-size: 0.82rem;
+      border-top: 1px solid var(--border);
+      margin-top: 2rem;
+      background: #fff;
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="brand-area">
+    <div class="brand-logo">PVLABGERMANY</div>
+    <div>
+      <div class="brand-slogan">MAKING QUALITY VISIBLE</div>
+      <div class="brand-sub" data-i18n="subtitle">דשבורד ניהול לידים חכם | מעבדה מוסמכת ISO/IEC 17025 (פוטסדאם)</div>
+    </div>
+  </div>
+  <div class="header-controls">
+    <span class="db-status" id="dbStatus" onclick="onStatusClick()" title="">
+      <span class="dot"></span><span id="dbStatusText">Demo Data</span>
+    </span>
+    <button class="btn-secondary" onclick="openSettings()" data-i18n="airtableBtn">חיבור ל-Airtable</button>
+    <div class="lang-switcher">
+      <button class="lang-btn active" onclick="setLang('he')">עברית</button>
+      <button class="lang-btn" onclick="setLang('de')">Deutsch</button>
+      <button class="lang-btn" onclick="setLang('en')">English</button>
+    </div>
+    <button class="btn-primary" onclick="openModal('newLeadModal')" data-i18n="newLeadBtn">+ ליד חדש</button>
+  </div>
+</header>
+
+<div class="container">
+  <!-- KPI Cards -->
+  <div class="kpi-grid">
+    <div class="kpi-card">
+      <div class="kpi-label" data-i18n="kpiLeads">סה״כ לידים פעילים</div>
+      <div class="kpi-value" id="kpiTotalLeads">0</div>
+    </div>
+    <div class="kpi-card accent">
+      <div class="kpi-label" data-i18n="kpiMw">היקף פרויקטים מצטבר (MW)</div>
+      <div class="kpi-value" id="kpiTotalMw">0 MW</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-label" data-i18n="kpiValue">שווי צנרת עסקאות משוער</div>
+      <div class="kpi-value" id="kpiTotalValue">€0</div>
+    </div>
+    <div class="kpi-card accent">
+      <div class="kpi-label" data-i18n="kpiScore">ציון איכות ליד ממוצע (AI)</div>
+      <div class="kpi-value" id="kpiAvgScore">0</div>
+    </div>
+  </div>
+
+  <!-- Charts -->
+  <div class="charts-grid">
+    <div class="card">
+      <div class="card-title" data-i18n="chartPipeline">התפלגות לידים לפי שלב טיפול</div>
+      <div class="chart-wrapper"><canvas id="pipelineChart"></canvas></div>
+    </div>
+    <div class="card">
+      <div class="card-title" data-i18n="chartService">היקף מגה-וואט (MW) לפי סוג בדיקת מעבדה</div>
+      <div class="chart-wrapper"><canvas id="serviceChart"></canvas></div>
+    </div>
+  </div>
+
+  <!-- Table Card -->
+  <div class="card">
+    <div class="filters-bar">
+      <div class="card-title" style="margin-bottom:0;" data-i18n="tableTitle">פניות לקוחות B2B ודירוג עדיפות חכם</div>
+      <div class="filter-group">
+        <input type="text" id="searchInput" oninput="renderAll()" placeholder="חיפוש חברה / פרויקט..." />
+        <select id="statusFilter" onchange="renderAll()">
+          <option value="ALL" data-i18n="filterAll">כל הסטטוסים</option>
+          <option value="new" data-i18n="st_new">חדש</option>
+          <option value="lab" data-i18n="st_lab">בבדיקת מעבדה</option>
+          <option value="quote" data-i18n="st_quote">הצעת מחיר נשלחה</option>
+          <option value="won" data-i18n="st_won">נסגר בהצלחה</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="table-responsive">
+      <table>
+        <thead>
+          <tr>
+            <th data-i18n="colCompany">חברה / פרויקט</th>
+            <th data-i18n="colService">סוג בדיקה</th>
+            <th data-i18n="colMw">היקף (MW)</th>
+            <th data-i18n="colValue">שווי (€)</th>
+            <th data-i18n="colScore">ציון AI</th>
+            <th data-i18n="colStatus">סטטוס</th>
+            <th data-i18n="colAction">פעולות</th>
+          </tr>
+        </thead>
+        <tbody id="leadsTableBody"></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- New Lead Modal -->
+<div class="overlay" id="newLeadModal">
+  <div class="modal-box">
+    <div class="modal-header">
+      <h3 style="color:var(--navy);" data-i18n="modalNewTitle">הוספת פניית לקוח חדשה</h3>
+      <button class="close-btn" onclick="closeModal('newLeadModal')">&times;</button>
+    </div>
+    <form onsubmit="addLead(event)">
+      <div class="form-row">
+        <label data-i18n="lblCompany">שם חברה / מתקן סולארי</label>
+        <input type="text" id="inCompany" required placeholder="e.g., EnBW Solar Park Brandenburg" />
+      </div>
+      <div class="form-row">
+        <label data-i18n="lblContact">איש קשר ואימייל</label>
+        <input type="text" id="inContact" required placeholder="Dr. M. Weber (m.weber@enbw-solar.de)" />
+      </div>
+      <div class="form-row">
+        <label data-i18n="lblService">סוג בדיקת מעבדה</label>
+        <select id="inService">
+          <option value="EL & Flasher Testing">EL & Flasher Testing (ISO 17025)</option>
+          <option value="Bankability Due Diligence">Bankability Due Diligence</option>
+          <option value="On-Site Mobile PV Lab">On-Site Mobile PV Lab</option>
+          <option value="Warranty & Claim Analysis">Warranty & Claim Analysis (PID/LID)</option>
+        </select>
+      </div>
+      <div class="form-row">
+        <label data-i18n="lblMw">היקף הפרויקט במגה-וואט (MW)</label>
+        <input type="number" id="inMw" required min="1" max="1000" value="25" />
+      </div>
+      <button type="submit" class="btn-primary" style="width:100%;" data-i18n="btnSaveLead">חשב ציון AI ושמור ליד</button>
+    </form>
+  </div>
+</div>
+
+<!-- Inspect Lead Modal -->
+<div class="overlay" id="inspectModal">
+  <div class="modal-box">
+    <div class="modal-header">
+      <h3 style="color:var(--navy);" id="insTitle">פרטי פרויקט</h3>
+      <button class="close-btn" onclick="closeModal('inspectModal')">&times;</button>
+    </div>
+    <div id="insBody"></div>
+  </div>
+</div>
+
+<!-- Airtable Settings Modal -->
+<div class="overlay" id="settingsModal">
+  <div class="modal-box">
+    <div class="modal-header">
+      <h3 style="color:var(--navy);" data-i18n="settingsTitle">הגדרות חיבור ל-Airtable</h3>
+      <button class="close-btn" onclick="closeModal('settingsModal')">&times;</button>
+    </div>
+    <form onsubmit="saveSettings(event)" autocomplete="off">
+      <div class="form-row">
+        <label for="inBaseId">Base ID</label>
+        <input type="text" id="inBaseId" required pattern="app[A-Za-z0-9]{14}" placeholder="appXXXXXXXXXXXXXX" spellcheck="false" />
+        <div class="form-hint" data-i18n="hintBaseId">מתחיל ב-app. נמצא בכתובת של הבסיס ב-Airtable.</div>
+      </div>
+      <div class="form-row">
+        <label for="inToken">Personal Access Token</label>
+        <input type="password" id="inToken" required placeholder="pat..." spellcheck="false" />
+        <div class="form-hint" data-i18n="hintToken">הרשאות נדרשות: data.records:read ו-data.records:write, לבסיס הזה בלבד. נשמר רק בדפדפן הזה.</div>
+      </div>
+      <div class="form-row">
+        <label for="inTable" data-i18n="lblTable">שם הטבלה</label>
+        <input type="text" id="inTable" required value="Leads" spellcheck="false" />
+      </div>
+      <div class="btn-row">
+        <button type="submit" class="btn-primary" id="btnConnect" data-i18n="btnConnect">שמור והתחבר</button>
+        <button type="button" class="btn-secondary" id="btnDisconnect" onclick="disconnect()" data-i18n="btnDisconnect">התנתק</button>
+      </div>
+      <div class="form-msg" id="settingsMsg"></div>
+    </form>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<footer>
+  PVLABGERMANY GmbH · Gartenstraße 36, 14482 Potsdam, Germany · Tel: +49 331 70403011 · j.arp@pv-lab.de
+</footer>
+
+<script>
+  let currentLang = 'he';
+
+  const i18n = {
+    he: {
+      dir: 'rtl',
+      subtitle: 'דשבורד ניהול לידים חכם | מעבדה מוסמכת ISO/IEC 17025 (פוטסדאם)',
+      newLeadBtn: '+ ליד חדש',
+      kpiLeads: 'סה״כ לידים פעילים',
+      kpiMw: 'היקף פרויקטים מצטבר (MW)',
+      kpiValue: 'שווי צנרת עסקאות משוער',
+      kpiScore: 'ציון איכות ליד ממוצע (AI)',
+      chartPipeline: 'התפלגות לידים לפי שלב טיפול',
+      chartService: 'היקף מגה-וואט (MW) לפי סוג בדיקה',
+      tableTitle: 'פניות לקוחות B2B ודירוג עדיפות חכם',
+      filterAll: 'כל הסטטוסים',
+      st_new: 'חדש',
+      st_lab: 'בבדיקת מעבדה',
+      st_quote: 'הצעת מחיר נשלחה',
+      st_won: 'נסגר בהצלחה',
+      colCompany: 'חברה / פרויקט',
+      colService: 'סוג בדיקה',
+      colMw: 'היקף (MW)',
+      colValue: 'שווי (€)',
+      colScore: 'ציון AI',
+      colStatus: 'סטטוס',
+      colAction: 'פעולות',
+      btnInspect: 'פרטים',
+      modalNewTitle: 'הוספת פניית לקוח חדשה',
+      lblCompany: 'שם חברה / מתקן סולארי',
+      lblContact: 'איש קשר ואימייל',
+      lblService: 'סוג בדיקת מעבדה',
+      lblMw: 'היקף הפרויקט במגה-וואט (MW)',
+      btnSaveLead: 'חשב ציון AI ושמור ליד',
+      searchPlaceholder: 'חיפוש חברה / פרויקט...',
+      protocolHeader: 'פרוטוקול בדיקת מעבדה מומלץ (Potsdam Lab):',
+      airtableBtn: 'חיבור ל-Airtable',
+      settingsTitle: 'הגדרות חיבור ל-Airtable',
+      hintBaseId: 'מתחיל ב-app. נמצא בכתובת של הבסיס ב-Airtable.',
+      hintToken: 'הרשאות נדרשות: data.records:read ו-data.records:write, לבסיס הזה בלבד. נשמר רק בדפדפן הזה.',
+      lblTable: 'שם הטבלה',
+      btnConnect: 'שמור והתחבר',
+      btnDisconnect: 'התנתק',
+      stDemo: 'נתוני דמה',
+      stLoading: 'מתחבר ל-Airtable…',
+      stLive: 'Live DB Connected',
+      stError: 'שגיאת חיבור',
+      tipLive: 'לחיצה תטען מחדש את הנתונים מ-Airtable',
+      tipError: 'לחיצה תפתח את הגדרות החיבור',
+      msgConnected: 'מחובר. נטענו {n} רשומות.',
+      msgDisconnected: 'החיבור נותק. מוצגים נתוני דמה.',
+      msgSaveFail: 'השמירה ב-Airtable נכשלה: ',
+      msgLoadFail: 'הטעינה מ-Airtable נכשלה: ',
+      msgSaved: 'נשמר ב-Airtable',
+      errAuth: 'הטוקן לא תקין או שאין לו הרשאה לבסיס הזה',
+      errNotFound: 'הבסיס או הטבלה לא נמצאו',
+      errNetwork: 'אין חיבור לרשת'
+    },
+    de: {
+      dir: 'ltr',
+      subtitle: 'Smart Lead Management Dashboard | ISO/IEC 17025 Prüflabor (Potsdam)',
+      newLeadBtn: '+ Neuer Lead',
+      kpiLeads: 'Aktive Leads Gesamt',
+      kpiMw: 'Gesamtleistung (MW)',
+      kpiValue: 'Geschätztes Auftragsvolumen',
+      kpiScore: 'Durchschn. AI-Lead-Score',
+      chartPipeline: 'Leads nach Projektphase',
+      chartService: 'Leistung (MW) nach Prüfverfahren',
+      tableTitle: 'B2B-Kundenanfragen & Intelligente Priorisierung',
+      filterAll: 'Alle Status',
+      st_new: 'Neu',
+      st_lab: 'In Laborprüfung',
+      st_quote: 'Angebot gesendet',
+      st_won: 'Gewonnen',
+      colCompany: 'Unternehmen / Projekt',
+      colService: 'Prüfverfahren',
+      colMw: 'Leistung (MW)',
+      colValue: 'Wert (€)',
+      colScore: 'AI-Score',
+      colStatus: 'Status',
+      colAction: 'Aktion',
+      btnInspect: 'Details',
+      modalNewTitle: 'Neue Kundenanfrage erfassen',
+      lblCompany: 'Unternehmen / Solarpark',
+      lblContact: 'Ansprechpartner & E-Mail',
+      lblService: 'Prüfverfahren im Labor',
+      lblMw: 'Anlagengröße in Megawatt (MW)',
+      btnSaveLead: 'AI-Score berechnen & speichern',
+      searchPlaceholder: 'Unternehmen / Projekt suchen...',
+      protocolHeader: 'Empfohlenes Prüfprotokoll (Labor Potsdam):',
+      airtableBtn: 'Airtable-Verbindung',
+      settingsTitle: 'Airtable-Verbindung einrichten',
+      hintBaseId: 'Beginnt mit app. Steht in der URL der Base in Airtable.',
+      hintToken: 'Benötigte Rechte: data.records:read und data.records:write, nur für diese Base. Wird nur in diesem Browser gespeichert.',
+      lblTable: 'Tabellenname',
+      btnConnect: 'Speichern & verbinden',
+      btnDisconnect: 'Trennen',
+      stDemo: 'Demodaten',
+      stLoading: 'Verbinde mit Airtable…',
+      stLive: 'Live DB Connected',
+      stError: 'Verbindungsfehler',
+      tipLive: 'Klicken, um die Daten neu aus Airtable zu laden',
+      tipError: 'Klicken, um die Verbindungseinstellungen zu öffnen',
+      msgConnected: 'Verbunden. {n} Datensätze geladen.',
+      msgDisconnected: 'Verbindung getrennt. Es werden Demodaten angezeigt.',
+      msgSaveFail: 'Speichern in Airtable fehlgeschlagen: ',
+      msgLoadFail: 'Laden aus Airtable fehlgeschlagen: ',
+      msgSaved: 'In Airtable gespeichert',
+      errAuth: 'Token ungültig oder ohne Zugriff auf diese Base',
+      errNotFound: 'Base oder Tabelle nicht gefunden',
+      errNetwork: 'Keine Netzwerkverbindung'
+    },
+    en: {
+      dir: 'ltr',
+      subtitle: 'Smart Lead Management Dashboard | ISO/IEC 17025 Accredited Lab (Potsdam)',
+      newLeadBtn: '+ New Lead',
+      kpiLeads: 'Total Active Leads',
+      kpiMw: 'Cumulative Capacity (MW)',
+      kpiValue: 'Estimated Pipeline Value',
+      kpiScore: 'Avg. AI Lead Score',
+      chartPipeline: 'Leads by Pipeline Stage',
+      chartService: 'Capacity (MW) by Lab Testing Service',
+      tableTitle: 'B2B Client Inquiries & Smart Priority Scoring',
+      filterAll: 'All Statuses',
+      st_new: 'New',
+      st_lab: 'Lab Testing',
+      st_quote: 'Quote Sent',
+      st_won: 'Closed Won',
+      colCompany: 'Company / Project',
+      colService: 'Testing Service',
+      colMw: 'Capacity (MW)',
+      colValue: 'Value (€)',
+      colScore: 'AI Score',
+      colStatus: 'Status',
+      colAction: 'Action',
+      btnInspect: 'Inspect',
+      modalNewTitle: 'Add New Client Inquiry',
+      lblCompany: 'Company / Solar Plant Name',
+      lblContact: 'Contact Person & Email',
+      lblService: 'Laboratory Testing Type',
+      lblMw: 'Project Capacity (MW)',
+      btnSaveLead: 'Calculate AI Score & Save',
+      searchPlaceholder: 'Search company / project...',
+      protocolHeader: 'Recommended Potsdam Lab Protocol:',
+      airtableBtn: 'Airtable Settings',
+      settingsTitle: 'Airtable Connection Settings',
+      hintBaseId: 'Starts with app. You can find it in the base URL in Airtable.',
+      hintToken: 'Required scopes: data.records:read and data.records:write, for this base only. Stored only in this browser.',
+      lblTable: 'Table name',
+      btnConnect: 'Save & Connect',
+      btnDisconnect: 'Disconnect',
+      stDemo: 'Demo Data',
+      stLoading: 'Connecting to Airtable…',
+      stLive: 'Live DB Connected',
+      stError: 'Connection Error',
+      tipLive: 'Click to reload data from Airtable',
+      tipError: 'Click to open connection settings',
+      msgConnected: 'Connected. Loaded {n} records.',
+      msgDisconnected: 'Disconnected. Showing demo data.',
+      msgSaveFail: 'Saving to Airtable failed: ',
+      msgLoadFail: 'Loading from Airtable failed: ',
+      msgSaved: 'Saved to Airtable',
+      errAuth: 'Token is invalid or has no access to this base',
+      errNotFound: 'Base or table not found',
+      errNetwork: 'No network connection'
+    }
+  };
+
+  // Demo data — shown only when no Airtable connection is configured (or it fails).
+  const DEMO_LEADS = [
+    { id: 1, company: 'BayWa r.e. Solar Projects', contact: 'T. Lindner (t.lindner@baywa-re.com)', service: 'Bankability Due Diligence', mw: 85, value: 42500, score: 94, status: 'lab', protocol: 'IEC 61215 / 61730 batch sampling, High-res EL imaging (200 modules), STC Flasher power verification.' },
+    { id: 2, company: 'Enerparc AG — Saxony Park', contact: 'K. Hoffmann (k.hoffmann@enerparc.de)', service: 'On-Site Mobile PV Lab', mw: 120, value: 58000, score: 97, status: 'quote', protocol: 'Deployment of PV Lab Mobile Unit on-site, nocturnal EL drone & ground inspection, IV-curve tracing.' },
+    { id: 3, company: 'Sonnedix Iberia Operations', contact: 'C. Mendoza (cmendoza@sonnedix.com)', service: 'Warranty & Claim Analysis', mw: 45, value: 29000, score: 86, status: 'new', protocol: 'PID (Potential Induced Degradation) stress chamber test, backsheet delamination & encapsulant yellowing analysis.' },
+    { id: 4, company: 'Munich Re Green Tech', contact: 'Dr. H. Vogel (hvogel@munichre.com)', service: 'Bankability Due Diligence', mw: 150, value: 74000, score: 98, status: 'won', protocol: 'Full manufacturer factory audit + independent ISO/IEC 17025 lab verification for insurance underwriting.' },
+    { id: 5, company: 'RWE Renewables Brandenburg', contact: 'S. Becker (s.becker@rwe.com)', service: 'EL & Flasher Testing', mw: 32, value: 18500, score: 78, status: 'lab', protocol: 'Pre-shipment electroluminescence micro-crack screening and low-irradiance performance matrix.' },
+    { id: 6, company: 'Vattenfall Solar Lausitz', contact: 'M. Krause (m.krause@vattenfall.de)', service: 'Warranty & Claim Analysis', mw: 18, value: 12000, score: 68, status: 'new', protocol: 'LID/LeTID degradation diagnostics and hotspot thermography report for manufacturer claim.' }
+  ];
+
+  let leads = DEMO_LEADS.map(l => ({ ...l }));
+  let pipelineChart, serviceChart;
+
+  /* ---------------- Airtable connection ----------------
+     Credentials are entered by the user in the settings modal and kept in
+     this browser's localStorage only. Nothing secret is stored in this file. */
+  const LS_KEY = 'pvlab.airtable';
+  const AIRTABLE_API = 'https://api.airtable.com/v0/';
+
+  // Airtable column names in the Leads table.
+  const F = {
+    company: 'Company', contact: 'Contact', service: 'Service', mw: 'MW',
+    value: 'Value', score: 'Score', status: 'Status', protocol: 'Protocol'
+  };
+  // Status codes used in the UI <-> labels stored in Airtable.
+  const STATUS_LABELS = { new: 'New', lab: 'Lab Testing', quote: 'Quote Sent', won: 'Closed Won' };
+
+  let dbState = 'demo'; // 'demo' | 'loading' | 'live' | 'error'
+  let dbErrorText = '';
+
+  function loadConfig() {
+    try {
+      const c = JSON.parse(localStorage.getItem(LS_KEY) || 'null');
+      if (c && c.baseId && c.token) return { table: 'Leads', ...c };
+    } catch (_) {}
+    return null;
+  }
+  function storeConfig(c) {
+    try { localStorage.setItem(LS_KEY, JSON.stringify(c)); return true; } catch (_) { return false; }
+  }
+  function clearConfig() {
+    try { localStorage.removeItem(LS_KEY); } catch (_) {}
+  }
+
+  async function airtable(cfg, path, options = {}) {
+    const url = AIRTABLE_API + encodeURIComponent(cfg.baseId) + '/' + encodeURIComponent(cfg.table) + path;
+    let res;
+    try {
+      res = await fetch(url, {
+        ...options,
+        headers: {
+          'Authorization': 'Bearer ' + cfg.token,
+          'Content-Type': 'application/json',
+          ...(options.headers || {})
+        }
+      });
+    } catch (_) {
+      throw new Error(i18n[currentLang].errNetwork);
+    }
+    if (!res.ok) {
+      const t = i18n[currentLang];
+      let detail = '';
+      try {
+        const body = await res.json();
+        detail = (body.error && (body.error.message || body.error.type || body.error)) || '';
+      } catch (_) {}
+      if (res.status === 401 || res.status === 403) throw new Error(t.errAuth);
+      if (res.status === 404) throw new Error(t.errNotFound);
+      throw new Error(`HTTP ${res.status}${detail ? ' — ' + detail : ''}`);
+    }
+    return res.json();
+  }
+
+  function parseStatus(v) {
+    if (!v) return 'new';
+    const s = String(v).trim().toLowerCase();
+    if (STATUS_LABELS[s]) return s;
+    const hit = Object.keys(STATUS_LABELS).find(k => STATUS_LABELS[k].toLowerCase() === s);
+    return hit || 'new';
+  }
+
+  function fromRecord(r) {
+    const f = r.fields || {};
+    const mw = Number(f[F.mw]) || 0;
+    const service = f[F.service] || '';
+    return {
+      id: r.id,
+      company: f[F.company] || '—',
+      contact: f[F.contact] || '',
+      service,
+      mw,
+      value: Number(f[F.value]) || mw * 520,
+      score: Number(f[F.score]) || calcScore(mw, service),
+      status: parseStatus(f[F.status]),
+      protocol: f[F.protocol] || ''
+    };
+  }
+
+  function toFields(l) {
+    return {
+      [F.company]: l.company, [F.contact]: l.contact, [F.service]: l.service,
+      [F.mw]: l.mw, [F.value]: l.value, [F.score]: l.score,
+      [F.status]: STATUS_LABELS[l.status], [F.protocol]: l.protocol
+    };
+  }
+
+  async function fetchAllRecords(cfg) {
+    const all = [];
+    let offset = '';
+    do {
+      const q = '?pageSize=100' + (offset ? '&offset=' + encodeURIComponent(offset) : '');
+      const page = await airtable(cfg, q);
+      all.push(...(page.records || []));
+      offset = page.offset || '';
+    } while (offset);
+    return all;
+  }
+
+  async function loadFromAirtable() {
+    const cfg = loadConfig();
+    if (!cfg) {
+      leads = DEMO_LEADS.map(l => ({ ...l }));
+      setDbState('demo');
+      renderAll();
+      return 0;
+    }
+    setDbState('loading');
+    try {
+      const records = await fetchAllRecords(cfg);
+      leads = records.map(fromRecord).reverse(); // newest first
+      setDbState('live');
+      renderAll();
+      return records.length;
+    } catch (err) {
+      // Keep the dashboard usable: fall back to demo data.
+      leads = DEMO_LEADS.map(l => ({ ...l }));
+      setDbState('error', err.message);
+      renderAll();
+      throw err;
+    }
+  }
+
+  function isLive() { return dbState === 'live' && !!loadConfig(); }
+
+  function setDbState(state, errText = '') {
+    dbState = state;
+    dbErrorText = errText;
+    renderDbStatus();
+  }
+
+  function renderDbStatus() {
+    const t = i18n[currentLang];
+    const el = document.getElementById('dbStatus');
+    el.className = 'db-status' + (dbState === 'demo' ? '' : ' ' + dbState);
+    const text = { demo: t.stDemo, loading: t.stLoading, live: t.stLive, error: t.stError }[dbState];
+    document.getElementById('dbStatusText').textContent = text;
+    el.title = dbState === 'live' ? t.tipLive : dbState === 'error' ? (dbErrorText + ' — ' + t.tipError) : '';
+  }
+
+  function onStatusClick() {
+    if (dbState === 'live') loadFromAirtable().catch(err => toast(i18n[currentLang].msgLoadFail + err.message, true));
+    else if (dbState === 'error') openSettings();
+  }
+
+  function openSettings() {
+    const cfg = loadConfig();
+    document.getElementById('inBaseId').value = cfg ? cfg.baseId : '';
+    document.getElementById('inToken').value = cfg ? cfg.token : '';
+    document.getElementById('inTable').value = cfg ? cfg.table : 'Leads';
+    document.getElementById('btnDisconnect').style.display = cfg ? '' : 'none';
+    setSettingsMsg('', '');
+    openModal('settingsModal');
+  }
+
+  function setSettingsMsg(text, kind) {
+    const el = document.getElementById('settingsMsg');
+    el.textContent = text;
+    el.className = 'form-msg' + (kind ? ' ' + kind : '');
+  }
+
+  async function saveSettings(e) {
+    e.preventDefault();
+    const cfg = {
+      baseId: document.getElementById('inBaseId').value.trim(),
+      token: document.getElementById('inToken').value.trim(),
+      table: document.getElementById('inTable').value.trim() || 'Leads'
+    };
+    const btn = document.getElementById('btnConnect');
+    btn.disabled = true;
+    setSettingsMsg(i18n[currentLang].stLoading, '');
+    storeConfig(cfg);
+    try {
+      const n = await loadFromAirtable();
+      setSettingsMsg(i18n[currentLang].msgConnected.replace('{n}', n), 'ok');
+      document.getElementById('btnDisconnect').style.display = '';
+      setTimeout(() => closeModal('settingsModal'), 900);
+    } catch (err) {
+      setSettingsMsg(i18n[currentLang].msgLoadFail + err.message, 'err');
+    } finally {
+      btn.disabled = false;
+    }
+  }
+
+  function disconnect() {
+    clearConfig();
+    loadFromAirtable();
+    closeModal('settingsModal');
+    toast(i18n[currentLang].msgDisconnected);
+  }
+
+  let toastTimer;
+  function toast(text, isErr = false) {
+    const el = document.getElementById('toast');
+    el.textContent = text;
+    el.className = 'toast show' + (isErr ? ' err' : '');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => { el.className = 'toast'; }, isErr ? 6000 : 2500);
+  }
+
+  function escapeHtml(v) {
+    return String(v ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  }
+
+  function calcScore(mw, service) {
+    return Math.min(99, Math.max(55, Math.round(52 + (mw * 0.35) + (String(service).includes('Bankability') ? 12 : 6))));
+  }
+
+  function setLang(lang) {
+    currentLang = lang;
+    document.documentElement.lang = lang;
+    document.documentElement.dir = i18n[lang].dir;
+    document.querySelectorAll('.lang-btn').forEach(btn => {
+      btn.classList.toggle('active', btn.textContent.toLowerCase().includes(lang === 'he' ? 'עברית' : lang === 'de' ? 'deutsch' : 'english'));
+    });
+    document.querySelectorAll('[data-i18n]').forEach(el => {
+      const key = el.getAttribute('data-i18n');
+      if (i18n[lang][key]) el.textContent = i18n[lang][key];
+    });
+    document.getElementById('searchInput').placeholder = i18n[lang].searchPlaceholder;
+    renderDbStatus();
+    renderAll();
+  }
+
+  function findLead(id) { return leads.find(l => String(l.id) === String(id)); }
+
+  async function updateStatus(id, newStatus) {
+    const item = findLead(id);
+    if (!item) return;
+    const prev = item.status;
+    item.status = newStatus;
+    renderAll();
+    if (!isLive()) return;
+    try {
+      await airtable(loadConfig(), '/' + encodeURIComponent(item.id), {
+        method: 'PATCH',
+        body: JSON.stringify({ fields: { [F.status]: STATUS_LABELS[newStatus] }, typecast: true })
+      });
+      toast(i18n[currentLang].msgSaved);
+    } catch (err) {
+      item.status = prev; // roll back so the UI matches Airtable
+      renderAll();
+      toast(i18n[currentLang].msgSaveFail + err.message, true);
+    }
+  }
+
+  async function addLead(e) {
+    e.preventDefault();
+    const form = e.target;
+    const company = document.getElementById('inCompany').value.trim();
+    const contact = document.getElementById('inContact').value.trim();
+    const service = document.getElementById('inService').value;
+    const mw = parseInt(document.getElementById('inMw').value, 10) || 10;
+    const lead = {
+      id: 'tmp-' + Date.now(),
+      company,
+      contact,
+      service,
+      mw,
+      value: mw * 520,
+      score: calcScore(mw, service),
+      status: 'new',
+      protocol: `ISO/IEC 17025 custom testing protocol for ${mw} MW (${service}) at PV Lab Potsdam.`
+    };
+
+    if (!isLive()) {
+      leads.unshift(lead);
+      form.reset();
+      closeModal('newLeadModal');
+      renderAll();
+      return;
+    }
+
+    const submitBtn = form.querySelector('button[type="submit"]');
+    submitBtn.disabled = true;
+    try {
+      const res = await airtable(loadConfig(), '', {
+        method: 'POST',
+        body: JSON.stringify({ records: [{ fields: toFields(lead) }], typecast: true })
+      });
+      leads.unshift(fromRecord(res.records[0]));
+      form.reset();
+      closeModal('newLeadModal');
+      renderAll();
+      toast(i18n[currentLang].msgSaved);
+    } catch (err) {
+      toast(i18n[currentLang].msgSaveFail + err.message, true); // modal stays open so nothing typed is lost
+    } finally {
+      submitBtn.disabled = false;
+    }
+  }
+
+  function openInspect(id) {
+    const item = findLead(id);
+    if (!item) return;
+    const t = i18n[currentLang];
+    document.getElementById('insTitle').textContent = item.company;
+    document.getElementById('insBody').innerHTML = `
+      <p><strong>${t.lblContact}:</strong> ${escapeHtml(item.contact)}</p>
+      <p style="margin-top:0.4rem;"><strong>${t.colService}:</strong> ${escapeHtml(item.service)}</p>
+      <p style="margin-top:0.4rem;"><strong>${t.colMw}:</strong> ${item.mw} MW | <strong>${t.colValue}:</strong> €${item.value.toLocaleString()}</p>
+      <p style="margin-top:0.4rem;"><strong>${t.colScore}:</strong> ${item.score} / 100</p>
+      <div class="protocol-box">
+        <strong>${t.protocolHeader}</strong><br/>
+        ${escapeHtml(item.protocol)}
+      </div>
+    `;
+    openModal('inspectModal');
+  }
+
+  function openModal(id) { document.getElementById(id).classList.add('open'); }
+  function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+
+  function renderAll() {
+    const t = i18n[currentLang];
+    const query = document.getElementById('searchInput').value.toLowerCase();
+    const statusF = document.getElementById('statusFilter').value;
+
+    const filtered = leads.filter(l => {
+      const matchesText = String(l.company).toLowerCase().includes(query) || String(l.service).toLowerCase().includes(query);
+      const matchesStatus = statusF === 'ALL' || l.status === statusF;
+      return matchesText && matchesStatus;
+    });
+
+    // KPIs
+    const totalMw = leads.reduce((sum, l) => sum + l.mw, 0);
+    const totalVal = leads.reduce((sum, l) => sum + l.value, 0);
+    const avgScore = leads.length ? Math.round(leads.reduce((sum, l) => sum + l.score, 0) / leads.length) : 0;
+
+    document.getElementById('kpiTotalLeads').textContent = leads.length;
+    document.getElementById('kpiTotalMw').textContent = `${totalMw} MW`;
+    document.getElementById('kpiTotalValue').textContent = `€${totalVal.toLocaleString()}`;
+    document.getElementById('kpiAvgScore').textContent = `${avgScore}/100`;
+
+    // Table
+    const tbody = document.getElementById('leadsTableBody');
+    tbody.innerHTML = filtered.map(l => {
+      const badgeClass = l.score >= 85 ? 'score-high' : l.score >= 75 ? 'score-med' : 'score-low';
+      return `
+        <tr>
+          <td><strong>${escapeHtml(l.company)}</strong><br/><span style="font-size:0.8rem;color:var(--text-muted);">${escapeHtml(l.contact)}</span></td>
+          <td>${escapeHtml(l.service)}</td>
+          <td><strong>${l.mw} MW</strong></td>
+          <td>€${l.value.toLocaleString()}</td>
+          <td><span class="score-badge ${badgeClass}">${l.score}</span></td>
+          <td>
+            <select onchange="updateStatus('${escapeHtml(l.id)}', this.value)">
+              <option value="new" ${l.status === 'new' ? 'selected' : ''}>${t.st_new}</option>
+              <option value="lab" ${l.status === 'lab' ? 'selected' : ''}>${t.st_lab}</option>
+              <option value="quote" ${l.status === 'quote' ? 'selected' : ''}>${t.st_quote}</option>
+              <option value="won" ${l.status === 'won' ? 'selected' : ''}>${t.st_won}</option>
+            </select>
+          </td>
+          <td><button class="btn-inspect" onclick="openInspect('${escapeHtml(l.id)}')">${t.btnInspect}</button></td>
+        </tr>
+      `;
+    }).join('');
+
+    renderCharts();
+  }
+
+  function renderCharts() {
+    const t = i18n[currentLang];
+    const counts = {
+      new: leads.filter(l => l.status === 'new').length,
+      lab: leads.filter(l => l.status === 'lab').length,
+      quote: leads.filter(l => l.status === 'quote').length,
+      won: leads.filter(l => l.status === 'won').length
+    };
+
+    if (pipelineChart) pipelineChart.destroy();
+    pipelineChart = new Chart(document.getElementById('pipelineChart'), {
+      type: 'doughnut',
+      data: {
+        labels: [t.st_new, t.st_lab, t.st_quote, t.st_won],
+        datasets: [{
+          data: [counts.new, counts.lab, counts.quote, counts.won],
+          backgroundColor: ['#3B6E9C', '#1B365D', '#C8102E', '#4A777A']
+        }]
+      },
+      options: { responsive: true, maintainAspectRatio: false }
+    });
+
+    const services = ['Bankability Due Diligence', 'On-Site Mobile PV Lab', 'EL & Flasher Testing', 'Warranty & Claim Analysis'];
+    const mwByService = services.map(s => leads.filter(l => l.service === s).reduce((acc, l) => acc + l.mw, 0));
+
+    if (serviceChart) serviceChart.destroy();
+    serviceChart = new Chart(document.getElementById('serviceChart'), {
+      type: 'bar',
+      data: {
+        labels: services,
+        datasets: [{
+          label: 'MW',
+          data: mwByService,
+          backgroundColor: ['#1B365D', '#C8102E', '#3B6E9C', '#4A777A'],
+          borderRadius: 5
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: { legend: { display: false } }
+      }
+    });
+  }
+
+  renderDbStatus();
+  renderAll();
+  if (loadConfig()) {
+    loadFromAirtable().catch(err => toast(i18n[currentLang].msgLoadFail + err.message, true));
+  }
+</script>
+</body>
+</html>
