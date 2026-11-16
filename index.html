@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>PV Lab Germany — Smart Lead Management Dashboard</title>
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
   <style>
     :root {
       --navy: #1B365D;
@@ -208,7 +208,13 @@
     .close-btn { background: none; border: none; font-size: 1.4rem; cursor: pointer; color: var(--text-muted); }
     .form-row { margin-bottom: 0.9rem; }
     .form-row label { display: block; font-size: 0.85rem; font-weight: 600; margin-bottom: 0.3rem; color: var(--navy); }
-    .form-row input, .form-row select { width: 100%; }
+    .form-row input, .form-row select, .form-row textarea { width: 100%; }
+    .form-row textarea { padding: 0.5rem 0.8rem; border: 1px solid var(--border); border-radius: 6px; font-size: 0.9rem; resize: vertical; min-height: 4.5rem; }
+    .form-row input[type="number"] { padding: 0.5rem 0.8rem; border: 1px solid var(--border); border-radius: 6px; font-size: 0.9rem; }
+    #newLeadModal:not(.editing) .edit-only { display: none; }
+    .actions-cell { display: flex; gap: 0.4rem; flex-wrap: wrap; }
+    .btn-edit { background: #fff; color: var(--navy); border: 1px solid var(--navy); padding: 0.3rem 0.7rem; border-radius: 5px; cursor: pointer; font-size: 0.82rem; font-weight: 600; }
+    .btn-edit:hover { background: var(--navy); color: #fff; }
 
     .protocol-box {
       background: var(--bg-page);
@@ -309,13 +315,13 @@
     <span class="db-status" id="dbStatus" onclick="onStatusClick()" title="">
       <span class="dot"></span><span id="dbStatusText">Demo Data</span>
     </span>
-    <button class="btn-secondary" onclick="openSettings()" data-i18n="airtableBtn">חיבור ל-Airtable</button>
+    <button class="btn-secondary" onclick="openSettings()" data-i18n="airtableBtn">חיבור ל-Airtable / Airtable Settings</button>
     <div class="lang-switcher">
       <button class="lang-btn active" onclick="setLang('he')">עברית</button>
       <button class="lang-btn" onclick="setLang('de')">Deutsch</button>
       <button class="lang-btn" onclick="setLang('en')">English</button>
     </div>
-    <button class="btn-primary" onclick="openModal('newLeadModal')" data-i18n="newLeadBtn">+ ליד חדש</button>
+    <button class="btn-primary" onclick="openNewLead()" data-i18n="newLeadBtn">+ ליד חדש</button>
   </div>
 </header>
 
@@ -391,10 +397,10 @@
 <div class="overlay" id="newLeadModal">
   <div class="modal-box">
     <div class="modal-header">
-      <h3 style="color:var(--navy);" data-i18n="modalNewTitle">הוספת פניית לקוח חדשה</h3>
+      <h3 style="color:var(--navy);" id="leadFormTitle">הוספת פניית לקוח חדשה</h3>
       <button class="close-btn" onclick="closeModal('newLeadModal')">&times;</button>
     </div>
-    <form onsubmit="addLead(event)">
+    <form id="leadForm" onsubmit="submitLead(event)">
       <div class="form-row">
         <label data-i18n="lblCompany">שם חברה / מתקן סולארי</label>
         <input type="text" id="inCompany" required placeholder="e.g., EnBW Solar Park Brandenburg" />
@@ -416,7 +422,15 @@
         <label data-i18n="lblMw">היקף הפרויקט במגה-וואט (MW)</label>
         <input type="number" id="inMw" required min="1" max="1000" value="25" />
       </div>
-      <button type="submit" class="btn-primary" style="width:100%;" data-i18n="btnSaveLead">חשב ציון AI ושמור ליד</button>
+      <div class="form-row edit-only">
+        <label for="inValue" data-i18n="colValue">שווי (€)</label>
+        <input type="number" id="inValue" min="0" step="1" />
+      </div>
+      <div class="form-row edit-only">
+        <label for="inProtocol" data-i18n="lblProtocol">פרוטוקול בדיקה</label>
+        <textarea id="inProtocol" rows="3"></textarea>
+      </div>
+      <button type="submit" class="btn-primary" style="width:100%;" id="leadFormSubmit">חשב ציון AI ושמור ליד</button>
     </form>
   </div>
 </div>
@@ -503,9 +517,13 @@
       lblService: 'סוג בדיקת מעבדה',
       lblMw: 'היקף הפרויקט במגה-וואט (MW)',
       btnSaveLead: 'חשב ציון AI ושמור ליד',
+      modalEditTitle: 'עריכת ליד',
+      btnSaveChanges: 'שמור שינויים',
+      btnEdit: 'עריכה',
+      lblProtocol: 'פרוטוקול בדיקה',
       searchPlaceholder: 'חיפוש חברה / פרויקט...',
       protocolHeader: 'פרוטוקול בדיקת מעבדה מומלץ (Potsdam Lab):',
-      airtableBtn: 'חיבור ל-Airtable',
+      airtableBtn: 'חיבור ל-Airtable / Airtable Settings',
       settingsTitle: 'הגדרות חיבור ל-Airtable',
       hintBaseId: 'מתחיל ב-app. נמצא בכתובת של הבסיס ב-Airtable.',
       hintToken: 'הרשאות נדרשות: data.records:read ו-data.records:write, לבסיס הזה בלבד. נשמר רק בדפדפן הזה.',
@@ -557,9 +575,13 @@
       lblService: 'Prüfverfahren im Labor',
       lblMw: 'Anlagengröße in Megawatt (MW)',
       btnSaveLead: 'AI-Score berechnen & speichern',
+      modalEditTitle: 'Lead bearbeiten',
+      btnSaveChanges: 'Änderungen speichern',
+      btnEdit: 'Bearbeiten',
+      lblProtocol: 'Prüfprotokoll',
       searchPlaceholder: 'Unternehmen / Projekt suchen...',
       protocolHeader: 'Empfohlenes Prüfprotokoll (Labor Potsdam):',
-      airtableBtn: 'Airtable-Verbindung',
+      airtableBtn: 'Airtable-Verbindung / Settings',
       settingsTitle: 'Airtable-Verbindung einrichten',
       hintBaseId: 'Beginnt mit app. Steht in der URL der Base in Airtable.',
       hintToken: 'Benötigte Rechte: data.records:read und data.records:write, nur für diese Base. Wird nur in diesem Browser gespeichert.',
@@ -611,6 +633,10 @@
       lblService: 'Laboratory Testing Type',
       lblMw: 'Project Capacity (MW)',
       btnSaveLead: 'Calculate AI Score & Save',
+      modalEditTitle: 'Edit Lead',
+      btnSaveChanges: 'Save Changes',
+      btnEdit: 'Edit',
+      lblProtocol: 'Testing Protocol',
       searchPlaceholder: 'Search company / project...',
       protocolHeader: 'Recommended Potsdam Lab Protocol:',
       airtableBtn: 'Airtable Settings',
@@ -877,6 +903,7 @@
     });
     document.getElementById('searchInput').placeholder = i18n[lang].searchPlaceholder;
     renderDbStatus();
+    syncLeadFormLabels();
     renderAll();
   }
 
@@ -902,13 +929,60 @@
     }
   }
 
-  async function addLead(e) {
-    e.preventDefault();
-    const form = e.target;
-    const company = document.getElementById('inCompany').value.trim();
-    const contact = document.getElementById('inContact').value.trim();
-    const service = document.getElementById('inService').value;
+  /* ---------- Lead form: create (POST) and edit (PATCH) ---------- */
+  let editingId = null; // null = creating a new lead
+
+  function syncLeadFormLabels() {
+    const t = i18n[currentLang];
+    document.getElementById('leadFormTitle').textContent = editingId ? t.modalEditTitle : t.modalNewTitle;
+    document.getElementById('leadFormSubmit').textContent = editingId ? t.btnSaveChanges : t.btnSaveLead;
+    document.getElementById('newLeadModal').classList.toggle('editing', !!editingId);
+  }
+
+  function openNewLead() {
+    editingId = null;
+    document.getElementById('leadForm').reset();
+    syncLeadFormLabels();
+    openModal('newLeadModal');
+  }
+
+  function openEditLead(id) {
+    const item = findLead(id);
+    if (!item) return;
+    editingId = item.id;
+    document.getElementById('inCompany').value = item.company === '—' ? '' : item.company;
+    document.getElementById('inContact').value = item.contact;
+    const sel = document.getElementById('inService');
+    if (item.service && ![...sel.options].some(o => o.value === item.service)) {
+      sel.add(new Option(item.service, item.service)); // keep values that came from Airtable
+    }
+    sel.value = item.service;
+    document.getElementById('inMw').value = item.mw;
+    document.getElementById('inValue').value = item.value;
+    document.getElementById('inProtocol').value = item.protocol;
+    syncLeadFormLabels();
+    closeModal('inspectModal');
+    openModal('newLeadModal');
+  }
+
+  function readLeadForm() {
     const mw = parseInt(document.getElementById('inMw').value, 10) || 10;
+    const service = document.getElementById('inService').value;
+    return {
+      company: document.getElementById('inCompany').value.trim(),
+      contact: document.getElementById('inContact').value.trim(),
+      service,
+      mw
+    };
+  }
+
+  function submitLead(e) {
+    e.preventDefault();
+    return editingId ? saveLeadEdit(e.target) : addLead(e.target);
+  }
+
+  async function addLead(form) {
+    const { company, contact, service, mw } = readLeadForm();
     const lead = {
       id: 'tmp-' + Date.now(),
       company,
@@ -929,7 +1003,7 @@
       return;
     }
 
-    const submitBtn = form.querySelector('button[type="submit"]');
+    const submitBtn = document.getElementById('leadFormSubmit');
     submitBtn.disabled = true;
     try {
       const res = await airtable(loadConfig(), '', {
@@ -943,6 +1017,52 @@
       toast(i18n[currentLang].msgSaved);
     } catch (err) {
       toast(i18n[currentLang].msgSaveFail + err.message, true); // modal stays open so nothing typed is lost
+    } finally {
+      submitBtn.disabled = false;
+    }
+  }
+
+  async function saveLeadEdit(form) {
+    const item = findLead(editingId);
+    if (!item) { closeModal('newLeadModal'); return; }
+    const { company, contact, service, mw } = readLeadForm();
+    const valueRaw = document.getElementById('inValue').value.trim();
+    const changes = {
+      company,
+      contact,
+      service,
+      mw,
+      value: valueRaw === '' ? mw * 520 : Math.max(0, Number(valueRaw) || 0),
+      protocol: document.getElementById('inProtocol').value.trim(),
+      // Recalculate the AI score only when its inputs changed, so a score set by hand in Airtable is kept.
+      score: (mw !== item.mw || service !== item.service) ? calcScore(mw, service) : item.score
+    };
+
+    if (!isLive()) {
+      Object.assign(item, changes);
+      editingId = null;
+      closeModal('newLeadModal');
+      renderAll();
+      return;
+    }
+
+    const submitBtn = document.getElementById('leadFormSubmit');
+    submitBtn.disabled = true;
+    try {
+      const fields = toFields({ ...item, ...changes });
+      delete fields[F.status]; // status has its own control; don't overwrite it from here
+      const res = await airtable(loadConfig(), '/' + encodeURIComponent(item.id), {
+        method: 'PATCH',
+        body: JSON.stringify({ fields, typecast: true })
+      });
+      const idx = leads.findIndex(l => String(l.id) === String(item.id));
+      if (idx !== -1) leads[idx] = fromRecord(res);
+      editingId = null;
+      closeModal('newLeadModal');
+      renderAll();
+      toast(i18n[currentLang].msgSaved);
+    } catch (err) {
+      toast(i18n[currentLang].msgSaveFail + err.message, true); // keep the form open with the user's edits
     } finally {
       submitBtn.disabled = false;
     }
@@ -962,6 +1082,7 @@
         <strong>${t.protocolHeader}</strong><br/>
         ${escapeHtml(item.protocol)}
       </div>
+      <button class="btn-primary" style="width:100%;margin-top:1rem;" onclick="openEditLead('${escapeHtml(item.id)}')">${t.btnEdit}</button>
     `;
     openModal('inspectModal');
   }
@@ -1009,7 +1130,10 @@
               <option value="won" ${l.status === 'won' ? 'selected' : ''}>${t.st_won}</option>
             </select>
           </td>
-          <td><button class="btn-inspect" onclick="openInspect('${escapeHtml(l.id)}')">${t.btnInspect}</button></td>
+          <td><div class="actions-cell">
+            <button class="btn-inspect" onclick="openInspect('${escapeHtml(l.id)}')">${t.btnInspect}</button>
+            <button class="btn-edit" onclick="openEditLead('${escapeHtml(l.id)}')">${t.btnEdit}</button>
+          </div></td>
         </tr>
       `;
     }).join('');
@@ -1063,6 +1187,7 @@
   }
 
   renderDbStatus();
+  syncLeadFormLabels();
   renderAll();
   if (loadConfig()) {
     loadFromAirtable().catch(err => toast(i18n[currentLang].msgLoadFail + err.message, true));
