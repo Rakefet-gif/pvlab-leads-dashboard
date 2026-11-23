@@ -11,6 +11,7 @@
 * **הוספת ליד חדש וחלונית פרטים טכניים:** הזנת פנייה חדשה בזמן אמת וצפייה בפרוטוקולי בדיקה (EL Imaging, Flasher, PID/LID, Due Diligence).
 * **תמיכה בשלוש שפות (עברית / Deutsch / English):** החלפת שפה וכיווניות (RTL/LTR) דינמית.
 * **חיבור לבסיס נתונים חי ב-Airtable:** הדאשבורד קורא וכותב לטבלה `Leads` ב-Airtable דרך ה-REST API הרשמי (ראו סעיף 4).
+* **קליטת לידים אוטומטית מ-Gmail:** אוטומציה חיצונית מסווגת מיילים נכנסים בעזרת Claude ויוצרת לידים חדשים בטבלת `Leads` (ראו סעיף 5).
 
 ## 4. אינטגרציה עם Airtable
 * **נקודת קצה:** `https://api.airtable.com/v0/{BASE_ID}/Leads` (שם הטבלה ניתן לשינוי בהגדרות).
@@ -39,3 +40,9 @@
 ## 3. עיצוב וארכיטקטורה טכנית
 * **טכנולוגיות:** HTML5, CSS3, Vanilla JavaScript, Chart.js, ו-Airtable REST API (באמצעות `fetch`, ללא שרת ביניים).
 * **זהות מותגית:** פלטת הצבעים הרשמית של PV Lab Germany — כחול נייבי תעשייתי (`#1B365D`), אדום-ארגמן (`#C8102E`), ומשטחי מעבדה בהירים (`#F4F6F8`).
+
+## 5. אוטומציית קליטת לידים מ-Gmail
+* **ריפו:** [pvlab-gmail-leads-automation](https://github.com/Rakefet-gif/pvlab-gmail-leads-automation), עם Blueprints לייבוא ב-Make.com וב-n8n.
+* **זרימה:** Gmail (מייל חדש) ← Claude מסווג את המייל (`lead` / `invoice` / `support` / `spam` / `other`) ומחלץ חברה, איש קשר, שירות, MW ופרוטוקול ← לידים נוצרים בטבלת `Leads` עם `Status = New`, והתראה נשלחת לצוות המכירות ← כל מייל אחר נרשם בטבלה `Inbox Log`.
+* **תאימות לדאשבורד:** האוטומציה כותבת לאותם שדות שבסעיף 4, ומחשבת `Score` ו-`Value` (MW × 520) באותה נוסחה של `calcScore` ב-`index.html`. שינוי בנוסחה צריך להיעשות בשני הריפואים.
+* **הרשאות:** האוטומציה משתמשת בטוקן Airtable נפרד משלה, עם אותן הרשאות מינימליות (`data.records:read`, `data.records:write`).

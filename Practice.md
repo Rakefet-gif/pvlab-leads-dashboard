@@ -4,6 +4,7 @@
 * `index.html` — קובץ אפליקציית הווב הראשית (דשבורד PV Lab Germany), כולל החיבור ל-Airtable.
 * `SPEC.md` — מסמך אפיון המערכת והדרישות הפונקציונליות.
 * `Practice.md` — הנחיות העבודה, השמירה והעדכון ב-GitHub.
+* ריפו משלים: [pvlab-gmail-leads-automation](https://github.com/Rakefet-gif/pvlab-gmail-leads-automation) — אוטומציה שיוצרת לידים בטבלת `Leads` מתוך מיילים ב-Gmail (ראו `SPEC.md` סעיף 5).
 
 ## 2. עקרונות עבודה עם Branches (ענפים)
 * **ענף ראשי (`main`):** מכיל גרסה יציבה ומוכנה להצגה בלבד.
